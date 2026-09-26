@@ -15,6 +15,8 @@ export class VoiceSession {
   private source?: MediaStreamAudioSourceNode
   private worklet?: AudioWorkletNode
   private playbackTime = 0
+  private sessionReady = false
+  private playbackSources = new Set<AudioBufferSourceNode>()
   private finished = false
   private endTimer?: number
 
@@ -39,7 +41,7 @@ export class VoiceSession {
         processorOptions: { inputSampleRate: this.input.sampleRate, targetSampleRate: 24000 },
       })
       this.worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
-        if (this.ws?.readyState !== WebSocket.OPEN || this.finished) return
+        if (!this.sessionReady || this.ws?.readyState !== WebSocket.OPEN || this.finished) return
         const bytes = new Uint8Array(event.data)
         let binary = ''
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
@@ -76,7 +78,13 @@ export class VoiceSession {
           },
         }))
       }
-      this.ws.onmessage = (event) => this.handleMessage(JSON.parse(event.data))
+      this.ws.onmessage = (event) => {
+        try {
+          this.handleMessage(JSON.parse(event.data) as Record<string, unknown>)
+        } catch {
+          this.events.onError('Received an invalid voice response. Please try again.')
+        }
+      }
       this.ws.onerror = () => this.events.onError('Voice connection failed. You can still use the text preview.')
       this.ws.onclose = () => {
         if (!this.finished) this.events.onError('Voice connection closed. Your visible transcript remains available.')
@@ -90,11 +98,20 @@ export class VoiceSession {
   }
 
   private handleMessage(message: Record<string, unknown>) {
-    if (message.type === 'session.ready') this.events.onStatus('listening')
+    if (message.type === 'session.ready') {
+      this.sessionReady = true
+      this.events.onStatus('listening')
+    }
     if (message.type === 'reply.started') this.events.onStatus('speaking')
     if (message.type === 'reply.done') {
       this.events.onStatus('listening')
-      if (message.status === 'interrupted') this.playbackTime = this.output?.currentTime ?? 0
+      if (message.status === 'interrupted') {
+        this.playbackSources.forEach((source) => {
+          try { source.stop() } catch { /* already stopped */ }
+        })
+        this.playbackSources.clear()
+        this.playbackTime = this.output?.currentTime ?? 0
+      }
     }
     if (message.type === 'transcript.user' || message.type === 'transcript.agent') {
       const text = typeof message.text === 'string' ? message.text.trim() : ''
@@ -123,6 +140,8 @@ export class VoiceSession {
     const node = ctx.createBufferSource()
     node.buffer = buffer
     node.connect(ctx.destination)
+    this.playbackSources.add(node)
+    node.onended = () => this.playbackSources.delete(node)
     this.playbackTime = Math.max(this.playbackTime, ctx.currentTime)
     node.start(this.playbackTime)
     this.playbackTime += buffer.duration
@@ -147,6 +166,10 @@ export class VoiceSession {
     if (this.endTimer) window.clearTimeout(this.endTimer)
     window.removeEventListener('pagehide', this.pagehide)
     this.ws?.close()
+    this.playbackSources.forEach((source) => {
+      try { source.stop() } catch { /* already stopped */ }
+    })
+    this.playbackSources.clear()
     this.stream?.getTracks().forEach((track) => track.stop())
     this.source?.disconnect()
     this.worklet?.disconnect()

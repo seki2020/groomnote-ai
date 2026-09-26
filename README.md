@@ -26,6 +26,15 @@ npx wrangler secret put ASSEMBLYAI_API_KEY
 npm run dev:worker
 ```
 
+### Deploy the public live demo
+
+The `Deploy live demo to Cloudflare` GitHub Actions workflow deploys the Worker and Vite-built static assets on pushes to `master`. Add these repository Actions secrets under **Settings → Secrets and variables → Actions**:
+
+- `CLOUDFLARE_API_TOKEN`: a Cloudflare API token with permission to deploy Workers.
+- `CLOUDFLARE_ACCOUNT_ID`: the Cloudflare account ID that owns the Worker.
+
+Then add `ASSEMBLYAI_API_KEY` as a **Worker secret** in Cloudflare (Workers & Pages → `groomnote-ai` → Settings → Variables and Secrets). Never add provider or Cloudflare credentials to the repository. The GitHub Pages address remains the static text preview; the live voice URL will be the `workers.dev` address shown after the first successful Cloudflare deployment.
+
 `npm run dev` uses a frontend-only Vite preview with a clear `503` voice response. This is useful when a local Worker emulator cannot start. Live voice is **not verified without a valid AssemblyAI account and key**. The current draft extractor is rule-based for both text and voice transcripts; it is not a production quality structured AI extraction service.
 
 ## Current scope

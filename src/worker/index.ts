@@ -4,6 +4,12 @@ type Env = { ASSEMBLYAI_API_KEY?: string }
 const app = new Hono<{ Bindings: Env }>()
 
 app.post('/api/voice-token', async (context) => {
+  // The endpoint is called by the same-origin demo. Reject cross-site requests
+  // before exchanging provider credentials for a billable session token.
+  const origin = context.req.header('Origin')
+  if (!origin || origin !== new URL(context.req.url).origin) {
+    return context.json({ error: 'Voice tokens can only be requested from this demo.' }, 403)
+  }
   const key = context.env.ASSEMBLYAI_API_KEY
   if (!key) return context.json({ error: 'Live voice is not configured yet. Try the text walkthrough.' }, 503)
   try {
