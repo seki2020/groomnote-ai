@@ -13,6 +13,10 @@ Open the local URL shown by Vite, then select **Live demo → Use text walkthrou
 
 `npm run build` compiles the React application and Cloudflare Worker. `npm run lint` runs oxlint.
 
+## Online preview
+
+The repository includes a GitHub Pages workflow for a **text walkthrough preview**. In repository **Settings → Pages → Build and deployment → Source**, choose **GitHub Actions**. A push to `master` builds and deploys the preview; `npm run build:pages` runs the same build locally. Open the URL shown in the deployment result, then choose **Live demo**. This build uses hash routing so `#/demo` remains available after refresh. GitHub Pages serves static files and cannot run the voice-token Worker, so its voice button is intentionally absent.
+
 ## Live voice configuration
 
 The voice path is designed for AssemblyAI Voice Agent. A Cloudflare Worker issues short-lived session tokens through `POST /api/voice-token`; the browser connects directly to the voice WebSocket, streams 24 kHz PCM audio, and displays transcript turns. The API key stays server-side.

@@ -12,7 +12,7 @@ This repository is organized around the ten required submission items. Fill in p
 | 6 | Video presentation | Pending | Record problem → live demo → review/save → architecture, then publish URL |
 | 7 | Slide presentation | Pending | Publish problem, user, flow, architecture, validation, next steps |
 | 8 | Public GitHub repository | Complete | https://github.com/seki2020/groomnote-ai |
-| 9 | Demo hosting platform | Planned | Cloudflare Workers |
+| 9 | Demo hosting platform | Planned | Cloudflare Workers for the final voice demo; GitHub Pages for a text-only UI preview |
 | 10 | Application URL | Pending | Deploy and verify `/` and `/demo` publicly |
 
 ## Draft long description

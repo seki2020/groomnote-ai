@@ -27,7 +27,7 @@ export class VoiceSession {
       this.input = new AudioContext()
       this.output = new AudioContext()
       await Promise.all([
-        this.input.audioWorklet.addModule('/pcm-processor.js'),
+        this.input.audioWorklet.addModule(`${import.meta.env.BASE_URL}pcm-processor.js`),
         this.input.resume(),
         this.output.resume(),
       ])
