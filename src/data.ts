@@ -64,7 +64,7 @@ export function draftFromTurns(appointmentId: string, turns: Turn[]): Note {
   if (/\b(haircut|trimmed (?:the |his |her )?(?:coat|hair)|full groom)\b/i.test(text)) services.push('Haircut / trim')
 
   const observed = sentences.filter((s) => /pulled away|shook|trembled|barked|settled|relaxed/i.test(s))
-  const handling = sentences.filter((s) => /lower setting|short break|slower|pause|towel|helped/i.test(s))
+  const handling = sentences.filter((s) => /lower setting|short break|slower|pause|towel|helped/i.test(s) && !/next (?:time|visit)/i.test(s))
   const requests = sentences.filter((s) => /owner (?:asked|requested|wanted)|client (?:asked|requested|wanted)/i.test(s))
   const future = sentences.filter((s) => /next (?:time|visit)|remember to|follow up/i.test(s))
   return {
